@@ -2,6 +2,8 @@
 
 GlueFrame is a wrapper object for <a href="http://github.com/23/glue">Glue</a> applications (eg. a <a href="http://23video.com">23 Video</a> player) that provides methods for interfacing with the application when it is embedded in an iframe. Its true value is shown when the application is embedded on a page with a different domain or protocol than the one of the application - in which case GlueFrame takes care of the cross-domain communication.
 
+GlueFrame accesses methods and properties in your application directly when the iframe and the page it is embedded on have the same protocol, domain and port. If not, messages are passed between the parent and child windows with window.postMessage. It works in IE8 and all modern browsers, and if your application is embedded on a page with the same protocol, domain and port, IE7 is supported too.
+
 When instantiated, the GlueFrame object provides an eventbased interface with methods for getting/setting of properties and binding/firing of events inside the application.
 
 # Usage
