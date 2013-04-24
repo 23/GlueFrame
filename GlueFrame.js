@@ -73,12 +73,12 @@ var GlueFrame = function(iframe, appName, domain) {
         }
     };
 
-    $this.fire = function(event) {
+    $this.fire = function(event, obj) {
         $this.method = $this.getMethod();
         if ($this.method === "object") {
-            return iframe.contentWindow[appName].fire.apply(null, [event]);
+            return iframe.contentWindow[appName].fire.apply(null, [event, obj]);
         } else if ($this.method === "post") {
-            var messageObject = {f: "fire", args: [event]};
+            var messageObject = {f: "fire", args: [event, obj]};
             iframe.contentWindow.postMessage( JSON.stringify(messageObject), domain );
         }
     };
