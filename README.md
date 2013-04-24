@@ -12,12 +12,16 @@ To use GlueFrame, simply include the script on your page and create a new object
 
     <script src="/path/to/GlueFrame.js"></script>
     <script>
-      var myApp = new GlueFrame( document.getElementById("myAppIframe"), "Player");
+      var myApp = new GlueFrame(document.getElementById("myAppIframe"), "Player");
     </script>
+
+If you want be absolutely sure that information passed from the page to the iframe is only ever accessed by your application, you can optionally pass in the protocol, domain and port of your application as the third argument:
+
+    var myApp = new GlueFrame(document.getElementById("myAppIframe"), "Player", "http://appdomain.com");
 
 The `myApp` object will now have four methods for you to use:
 
-## get(property, callback)
+### get(property, callback)
 
 When calling `get()`, you get access to all the properties that has been made available with a getter in your application. Simply pass in the name of the property and a callback function to handle the value of said property when it is passed back from your application (calling `get` does not return the value directly):
 
@@ -27,7 +31,7 @@ When calling `get()`, you get access to all the properties that has been made av
 
 Note that requests and responses in cross-domain situations are passed to and from the application as JSON-strings and therefore cannot contain references to DOM-elements. In this case, the callback function will not be called.
 
-## set(property, value[, callback])
+### set(property, value[, callback])
 
 `set()` allows you to call the setter-methods specified in your application. If the application is a video player, you may start playback of a video by setting the `playing` property to `true`:
 
@@ -35,7 +39,7 @@ Note that requests and responses in cross-domain situations are passed to and fr
 
 If you expect the setter-method in your application to return a value, you can optionally specify a callback function to handle that value, when it is passed back.
 
-## bind(event, callback)
+### bind(event, callback)
 
 With `bind()` you can register eventlisteners for events being fired inside your application. Say that you want to listen for the event that playback of a video has reached the end. In this case, pass "player:video:ended" as the event name and a function to be executed, when the event occurs:
 
@@ -45,7 +49,7 @@ With `bind()` you can register eventlisteners for events being fired inside your
 
 Please note that the callback function is not necessarily called with an object and thus might have `eventName` as the single argument.
 
-## fire(event[, object])
+### fire(event[, object])
 
 `fire()` allows you manually fire events in your application (both built-in and custom events), simply by calling it with the name of the event, and optionally an object that should be passed to all eventlisteners listening for this event.
 
