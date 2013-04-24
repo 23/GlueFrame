@@ -6,16 +6,17 @@ var GlueFrame = function(iframe, appName, domain) {
         domain = "*";
     }
 
-    try {
-        if (iframe.contentWindow[appName]) {
-            $this.method = "object";
+    $this.getMethod = function() {
+        try {
+            if (iframe.contentWindow[appName]) {
+                return "object";
+            }
+        } catch(err) {console.log("no object");}
+        if (window.postMessage !== undefined) {
+            return "post";
+        } else {
+            return "none";
         }
-    } catch(err) {}
-    if (!$this.method && window.postMessage) {
-        $this.method = "post";
-    } else if (!$this.method) {
-        $this.method = "none";
-        return;
     }
 
     $this.callbackId = -1;
@@ -28,51 +29,55 @@ var GlueFrame = function(iframe, appName, domain) {
         } else if (!requireCallback && (callback === undefined || typeof callback === "function")) {
             $this.callbacks[$this.callbackId] = callback;
         } else {
-            throw "GlueFrame.js: Callback not registered correctly."
+            throw "GlueFrame: Callback not registered correctly.";
         }
         return $this.callbackId;
     };
 
     $this.get = function(prop, callback) {
+        $this.method = $this.getMethod();
         var cbId = $this.registerCallback(callback, true);
         if ($this.method === "object") {
             var value = iframe.contentWindow[appName].get.apply(null, [prop]);
             if ($this.callbacks[$this.callbackId] !== undefined) {
                 $this.callbacks[$this.callbackId].apply(null, [value]);
             }
-        } else {
+        } else if ($this.method === "post") {
             var messageObject = {f: "get", args: [prop], cbId: cbId};
             iframe.contentWindow.postMessage( JSON.stringify(messageObject), domain );
         }
     };
 
     $this.set = function(prop, val, callback) {
+        $this.method = $this.getMethod();
         var cbId = $this.registerCallback(callback, false);
         if ($this.method === "object") {
             var value = iframe.contentWindow[appName].set.apply(null, [prop, val]);
             if ($this.callbacks[$this.callbackId] !== undefined) {
                 $this.callbacks[$this.callbackId].apply(null, [value]);
             }
-        } else {
+        } else if ($this.method === "post") {
             var messageObject = {f: "set", args: [prop, val], cbId: cbId};
             iframe.contentWindow.postMessage( JSON.stringify(messageObject), domain );
         }
     };
 
     $this.bind = function(event, callback) {
+        $this.method = $this.getMethod();
         var cbId = $this.registerCallback(callback, true);
         if ($this.method === "object") {
             iframe.contentWindow[appName].bind.apply(null, [event, callback]);
-        } else {
+        } else if ($this.method === "post") {
             var messageObject = {f: "bind", args: [event], cbId: cbId};
             iframe.contentWindow.postMessage( JSON.stringify(messageObject), domain );
         }
     };
 
     $this.fire = function(event) {
+        $this.method = $this.getMethod();
         if ($this.method === "object") {
             return iframe.contentWindow[appName].fire.apply(null, [event]);
-        } else {
+        } else if ($this.method === "post") {
             var messageObject = {f: "fire", args: [event]};
             iframe.contentWindow.postMessage( JSON.stringify(messageObject), domain );
         }
