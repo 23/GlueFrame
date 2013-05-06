@@ -15,10 +15,6 @@ To use GlueFrame, simply include the script on your page and create a new object
       var myApp = new GlueFrame(document.getElementById("myAppIframe"), "Player");
     </script>
 
-If you want be absolutely sure that information passed from the page to the iframe is only ever accessed by your application, you can optionally pass in the protocol, domain and port of your application as the third argument:
-
-    var myApp = new GlueFrame(document.getElementById("myAppIframe"), "Player", "http://appdomain.com");
-
 The `myApp` object will now have four methods for you to use:
 
 ### get(property, callback)

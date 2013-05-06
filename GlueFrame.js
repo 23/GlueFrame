@@ -1,9 +1,7 @@
-var GlueFrame = function(iframe, appName, domain) {
+var GlueFrame = function(iframe, appName) {
     var $this = this;
-    // Allow posting messages to all domains, if no domain is specfied
-    if (!domain) {
-        domain = "*";
-    }
+    // Allow posting messages only to the domain of the app
+    $this.domain = (""+iframe.src).split("/").slice(0,3).join("/");
     // Determine method of communication with iframe
     $this.getMethod = function() {
         try {
@@ -17,13 +15,24 @@ var GlueFrame = function(iframe, appName, domain) {
             return "none";
         }
     }
-    // Remove Prototype's toJSON methods when present
-    if(window.Prototype) {
+    // Temporarily backup and remove toJSON methods added by frameworks like Prototype.js
+    $this.hideToJSON = function() {
+        $this.objectPrototype = Object.prototype.toJSON;
+        $this.arrayPrototype = Array.prototype.toJSON;
+        $this.hashPrototype = Hash.prototype.toJSON;
+        $this.stringPrototype = String.prototype.toJSON;
         delete Object.prototype.toJSON;
         delete Array.prototype.toJSON;
         delete Hash.prototype.toJSON;
         delete String.prototype.toJSON;
-    }
+    };
+    // Restore toJSON methods
+    $this.restoreToJSON = function() {
+        Object.prototype.toJSON = $this.objectPrototype;
+        Array.prototype.toJSON = $this.arrayPrototype;
+        Hash.prototype.toJSON = $this.hashPrototype;
+        String.prototype.toJSON = $this.stringPrototype;
+    };
     $this.callbackId = -1;
     $this.callbacks = [];
     // Store callback functions in the parent window
@@ -47,8 +56,10 @@ var GlueFrame = function(iframe, appName, domain) {
                 $this.callbacks[$this.callbackId].apply(null, [value]);
             }
         } else if ($this.method === "post") {
+            $this.hideToJSON();
             var messageObject = {f: "get", args: [prop], cbId: cbId};
-            iframe.contentWindow.postMessage( JSON.stringify(messageObject), domain );
+            iframe.contentWindow.postMessage( JSON.stringify(messageObject), $this.domain );
+            $this.restoreToJSON();
         }
     };
     $this.set = function(prop, val, callback) {
@@ -60,8 +71,10 @@ var GlueFrame = function(iframe, appName, domain) {
                 $this.callbacks[$this.callbackId].apply(null, [value]);
             }
         } else if ($this.method === "post") {
+            $this.hideToJSON();
             var messageObject = {f: "set", args: [prop, val], cbId: cbId};
-            iframe.contentWindow.postMessage( JSON.stringify(messageObject), domain );
+            iframe.contentWindow.postMessage( JSON.stringify(messageObject), $this.domain );
+            $this.restoreToJSON();
         }
     };
     $this.bind = function(event, callback) {
@@ -70,8 +83,10 @@ var GlueFrame = function(iframe, appName, domain) {
         if ($this.method === "object") {
             iframe.contentWindow[appName].bind.apply(null, [event, callback]);
         } else if ($this.method === "post") {
+            $this.hideToJSON();
             var messageObject = {f: "bind", args: [event], cbId: cbId};
-            iframe.contentWindow.postMessage( JSON.stringify(messageObject), domain );
+            iframe.contentWindow.postMessage( JSON.stringify(messageObject), $this.domain );
+            $this.restoreToJSON();
         }
     };
     $this.fire = function(event, obj) {
@@ -79,16 +94,20 @@ var GlueFrame = function(iframe, appName, domain) {
         if ($this.method === "object") {
             return iframe.contentWindow[appName].fire.apply(null, [event, obj]);
         } else if ($this.method === "post") {
+            $this.hideToJSON();
             var messageObject = {f: "fire", args: [event, obj]};
-            iframe.contentWindow.postMessage( JSON.stringify(messageObject), domain );
+            iframe.contentWindow.postMessage( JSON.stringify(messageObject), $this.domain );
+            $this.restoreToJSON();
         }
     };
     // Parse messages received from iframe
     $this.receiveMessage = function(e) {
+      if (e.origin === $this.domain) {
         var data = JSON.parse(e.data);
         if (data.cbId !== undefined && $this.callbacks[parseInt(data.cbId, 10)] !== undefined) {
             $this.callbacks[parseInt(data.cbId, 10)].apply(null, [data.a, data.b]);
         }
+      }
     };
     // Listen for message events
     if (window.addEventListener) {
