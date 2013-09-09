@@ -17,21 +17,37 @@ var GlueFrame = function(iframe, appName) {
     }
     // Temporarily backup and remove toJSON methods added by frameworks like Prototype.js
     $this.hideToJSON = function() {
-        $this.objectPrototype = Object.prototype.toJSON;
-        $this.arrayPrototype = Array.prototype.toJSON;
-        $this.hashPrototype = Hash.prototype.toJSON;
-        $this.stringPrototype = String.prototype.toJSON;
-        delete Object.prototype.toJSON;
-        delete Array.prototype.toJSON;
-        delete Hash.prototype.toJSON;
-        delete String.prototype.toJSON;
+        if (typeof Object != "undefined") {
+            $this.objectPrototype = Object.prototype.toJSON;
+            delete Object.prototype.toJSON;
+	}
+	if (typeof Array != "undefined") {
+            $this.arrayPrototype = Array.prototype.toJSON;
+            delete Array.prototype.toJSON;
+	}
+	if (typeof Hash != "undefined") {
+            $this.hashPrototype = Hash.prototype.toJSON;
+            delete Hash.prototype.toJSON;
+	}
+	if (typeof String != "undefined") {
+            $this.stringPrototype = String.prototype.toJSON;
+            delete String.prototype.toJSON;
+	}
     };
     // Restore toJSON methods
     $this.restoreToJSON = function() {
-        Object.prototype.toJSON = $this.objectPrototype;
-        Array.prototype.toJSON = $this.arrayPrototype;
-        Hash.prototype.toJSON = $this.hashPrototype;
-        String.prototype.toJSON = $this.stringPrototype;
+        if (typeof Object != "undefined") {
+            Object.prototype.toJSON = $this.objectPrototype;
+	}
+	if (typeof Array != "undefined") {
+            Array.prototype.toJSON = $this.arrayPrototype;
+	}
+	if (typeof Hash != "undefined") {
+            Hash.prototype.toJSON = $this.hashPrototype;
+	}
+	if (typeof String != "undefined") {
+            String.prototype.toJSON = $this.stringPrototype;
+	}
     };
     $this.callbackId = -1;
     $this.callbacks = [];
