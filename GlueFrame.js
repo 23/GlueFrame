@@ -2,18 +2,29 @@ var GlueFrame = function(iframe, appName) {
     var $this = this;
     // Allow posting messages only to the domain of the app
     $this.domain = (""+iframe.src).split("/").slice(0,3).join("/");
+    // Have we received a "ready" call from the app iframe?
+    $this.ready = false;
     // Determine method of communication with iframe
     $this.getMethod = function() {
-        try {
-            if (iframe.contentWindow[appName]) {
-                return "object";
-            }
-        } catch(err) {}
-        if (window.postMessage !== undefined) {
+        if ($this.domain == (""+window.location).split("/").slice(0,3).join("/") ) {
+            return "object";
+        } else if (typeof window.postMessage !== "undefined") {
             return "post";
         } else {
             return "none";
         }
+    }
+    $this.method = $this.getMethod();
+    // Check if app is bootstrapped by polling the app object until success
+    // Only relevant in IE7 where postMessage is not available
+    if ($this.method == "object" && typeof window.postMessage == "undefined") {
+	var readyInterval = window.setInterval(function(){
+            if (iframe.contentWindow[appName] && iframe.contentWindow[appName].bootstrapped) {
+		$this.ready = true;
+		$this.processQueue();
+		window.clearInterval(readyInterval);
+	    }
+	}, 100);
     }
     // Temporarily backup and remove toJSON methods added by frameworks like Prototype.js
     $this.hideToJSON = function() {
@@ -63,8 +74,23 @@ var GlueFrame = function(iframe, appName) {
         }
         return $this.callbackId;
     };
+    // Queue up method calls until app is ready
+    $this.queue = [];
+    $this.addToQueue = function(method, args) {
+	$this.queue.push({method: method, args: args});
+    };
+    $this.processQueue = function() {
+        for (var i = 0; i < $this.queue.length; i += 1) {
+	    var queueItem = $this.queue[i];
+            queueItem.method.apply(null, queueItem.args);
+	}
+        $this.set("queuedEventsProcessed", true);
+    };
     $this.get = function(prop, callback) {
-        $this.method = $this.getMethod();
+	if (!$this.ready) {
+	    $this.addToQueue($this.get, [prop, callback]);
+            return;
+	}
         var cbId = $this.registerCallback(callback, true);
         if ($this.method === "object") {
             var value = iframe.contentWindow[appName].get.apply(null, [prop]);
@@ -79,7 +105,10 @@ var GlueFrame = function(iframe, appName) {
         }
     };
     $this.set = function(prop, val, callback) {
-        $this.method = $this.getMethod();
+	if (!$this.ready) {
+	    $this.addToQueue($this.set, [prop, val, callback]);
+            return;
+	}
         var cbId = $this.registerCallback(callback, false);
         if ($this.method === "object") {
             var value = iframe.contentWindow[appName].set.apply(null, [prop, val]);
@@ -93,20 +122,27 @@ var GlueFrame = function(iframe, appName) {
             $this.restoreToJSON();
         }
     };
-    $this.bind = function(event, callback) {
-        $this.method = $this.getMethod();
+    $this.bind = function(event, callback, triggerQueue) {
+        var triggerQueue = triggerQueue || false;
+	if (!$this.ready) {
+	    $this.addToQueue($this.bind, [event, callback, true]);
+            return;
+	}
         var cbId = $this.registerCallback(callback, true);
         if ($this.method === "object") {
-            iframe.contentWindow[appName].bind.apply(null, [event, callback]);
+            iframe.contentWindow[appName].bind.apply(null, [event, callback, triggerQueue]);
         } else if ($this.method === "post") {
             $this.hideToJSON();
-            var messageObject = {f: "bind", args: [event], cbId: cbId};
+            var messageObject = {f: "bind", args: [event], cbId: cbId, triggerQueue: triggerQueue};
             iframe.contentWindow.postMessage( JSON.stringify(messageObject), $this.domain );
             $this.restoreToJSON();
         }
     };
     $this.fire = function(event, obj) {
-        $this.method = $this.getMethod();
+	if (!$this.ready) {
+	    $this.addToQueue($this.fire, [event, obj]);
+            return;
+	}
         if ($this.method === "object") {
             return iframe.contentWindow[appName].fire.apply(null, [event, obj]);
         } else if ($this.method === "post") {
@@ -118,12 +154,15 @@ var GlueFrame = function(iframe, appName) {
     };
     // Parse messages received from iframe
     $this.receiveMessage = function(e) {
-      if (e.origin === $this.domain) {
-        var data = JSON.parse(e.data);
-        if (data.cbId !== undefined && $this.callbacks[parseInt(data.cbId, 10)] !== undefined) {
-            $this.callbacks[parseInt(data.cbId, 10)].apply(null, [data.a, data.b]);
-        }
-      }
+	if (e.origin === $this.domain) {
+            var data = JSON.parse(e.data);
+            if (data.cbId !== undefined && $this.callbacks[parseInt(data.cbId, 10)] !== undefined) {
+		$this.callbacks[parseInt(data.cbId, 10)].apply(null, [data.a, data.b]);
+            } else if (data.ready) {
+		$this.ready = true;
+                $this.processQueue();
+            }
+	}
     };
     // Listen for message events
     if (window.addEventListener) {
