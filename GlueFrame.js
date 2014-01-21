@@ -15,11 +15,11 @@ var GlueFrame = function(iframe, appName) {
             return "none";
         }
     }
+    $this.method = $this.getMethod();
 
     // Poll the iframe until the app is bootstrapped
     $this.ready = false;
     $this.readyInterval = window.setInterval(function(){
-        $this.method = $this.getMethod();
         if (!this.ready && $this.method === "object") {
             if (iframe.contentWindow[appName] && iframe.contentWindow[appName].bootstrapped) {
                 $this.ready = true;
