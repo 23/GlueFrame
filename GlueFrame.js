@@ -2,6 +2,9 @@ var GlueFrame = function(iframe, appName) {
 
     var $this = this;
 
+    // GlueFrame version
+    $this.glueframe = "1.1";
+
     // Allow posting messages only to the domain of the app
     $this.domain = (""+iframe.src).split("/").slice(0,3).join("/");
 
