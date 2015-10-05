@@ -1,0 +1,25 @@
+{
+  "name": "glueframe",
+  "version": "1.1.0",
+  "description": "GlueFrame is a wrapper object for Glue applications (eg. a 23 Video player) that provides methods for interfacing with the application when it is embedded in an iframe. http://23video.com",
+  "main": "GlueFrame.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/23/GlueFrame.git"
+  },
+  "keywords": [
+    "glue",
+    "glueframe",
+    "23",
+    "23video"
+  ],
+  "author": "Kalle Kabell <kkabell@gmail.com> (http://www.23video.com)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/23/GlueFrame/issues"
+  },
+  "homepage": "https://github.com/23/GlueFrame"
+}
