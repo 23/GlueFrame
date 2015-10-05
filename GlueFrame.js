@@ -164,3 +164,5 @@ var GlueFrame = function(iframe, appName) {
     }
 
 };
+
+module.exports = GlueFrame;
