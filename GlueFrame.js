@@ -165,4 +165,6 @@ var GlueFrame = function(iframe, appName) {
 
 };
 
-module.exports = GlueFrame;
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = GlueFrame;
+}
