@@ -146,8 +146,11 @@ var GlueFrame = function(iframe, appName) {
     // Parse messages received from iframe
     var _receiveMessage = function(e) {
     	if (e.origin === _domain) {
-            var data = JSON.parse(e.data);
-            if (typeof data.cbId !== "undefined" && typeof _callbacks[data.cbId] === "function") {
+            var data;
+            try {
+                data = JSON.parse(e.data);
+            }catch(e){}
+            if (typeof data !== "undefined" && typeof data.cbId !== "undefined" && typeof _callbacks[data.cbId] === "function") {
                 _callbacks[data.cbId].apply(null, [data.a, data.b]);
             }
         }
