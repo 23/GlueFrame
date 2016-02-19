@@ -39,21 +39,19 @@ var GlueFrame = function(iframe, appName) {
         }
     }, 100);
 
-    var _callbackId = -1;
     $this.glueFrameId = (new Date()).getTime();
+    var _callbackCount = 0;
     var _callbacks = {};
 
     // Store callback functions in the parent window
     var _registerCallback = function(callback, requireCallback) {
-        _callbackId = _callbackId + 1;
-        if (requireCallback && callback !== undefined && typeof callback === "function") {
-            _callbacks[$this.glueFrameId+"_"+_callbackId] = callback;
-        } else if (!requireCallback && (callback === undefined || typeof callback === "function")) {
-            _callbacks[$this.glueFrameId+"_"+_callbackId] = callback;
-        } else {
+        var callbackIdentifier = $this.glueFrameId + "_" + (++_callbackCount);
+        if (typeof callback === "function") {
+            _callbacks[callbackIdentifier] = callback;
+        } else if (requireCallback) {
             throw "GlueFrame: Callback not registered correctly.";
         }
-        return $this.glueFrameId+"_"+_callbackId;
+        return callbackIdentifier;
     };
 
     // Queue up method calls until app is ready
@@ -80,8 +78,8 @@ var GlueFrame = function(iframe, appName) {
         var cbId = _registerCallback(callback, true);
         if (_method === "object") {
             var value = iframe.contentWindow[appName].get.apply(null, [prop]);
-            if (_callbacks[_callbackId] !== undefined) {
-                _callbacks[_callbackId].apply(null, [value]);
+            if (typeof _callbacks[cbId] !== "undefined") {
+                _callbacks[cbId].apply(null, [value]);
             }
         } else if (_method === "post") {
             var messageObject = {f: "get", args: [prop], cbId: cbId};
@@ -97,8 +95,8 @@ var GlueFrame = function(iframe, appName) {
         var cbId = _registerCallback(callback, false);
         if (_method === "object") {
             var value = iframe.contentWindow[appName].set.apply(null, [prop, val]);
-            if (_callbacks[_callbackId] !== undefined) {
-                _callbacks[_callbackId].apply(null, [value]);
+            if (typeof _callbacks[cbId] !== "undefined") {
+                _callbacks[cbId].apply(null, [value]);
             }
         } else if (_method === "post") {
             var messageObject = {f: "set", args: [prop, val], cbId: cbId};
@@ -149,7 +147,7 @@ var GlueFrame = function(iframe, appName) {
     var _receiveMessage = function(e) {
     	if (e.origin === _domain) {
             var data = JSON.parse(e.data);
-            if (data.cbId !== undefined && _callbacks[data.cbId] !== undefined) {
+            if (typeof data.cbId !== "undefined" && typeof _callbacks[data.cbId] === "function") {
                 _callbacks[data.cbId].apply(null, [data.a, data.b]);
             }
         }
