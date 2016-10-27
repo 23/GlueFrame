@@ -3,7 +3,7 @@ var GlueFrame = function(iframe, appName) {
     var $this = this;
 
     // GlueFrame version
-    $this.glueframe = "1.1.2";
+    $this.glueframe = "1.1.3";
 
     // Allow posting messages only to the domain of the app
     var _domain = (""+iframe.src).split("/").slice(0,3).join("/");
@@ -164,6 +164,7 @@ var GlueFrame = function(iframe, appName) {
     }
 
 };
+if(typeof(window.onGlueFrameAvailable)=='function') window.onGlueFrameAvailable(GlueFrame);
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = GlueFrame;
