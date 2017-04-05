@@ -27,6 +27,11 @@ When calling `get()`, you get access to all the properties that has been made av
 
 Note that requests and responses in cross-domain situations are passed to and from the application as JSON-strings and therefore cannot contain references to DOM-elements. In this case, the callback function will not be called.
 
+You can get the following parameters:
+
+ - currentTime
+ - playing
+
 ### set(property, value[, callback])
 
 `set()` allows you to call the setter-methods specified in your application. If the application is a video player, you may start playback of a video by setting the `playing` property to `true`:
@@ -34,6 +39,11 @@ Note that requests and responses in cross-domain situations are passed to and fr
     myApp.set("playing", true);
 
 If you expect the setter-method in your application to return a value, you can optionally specify a callback function to handle that value, when it is passed back.
+
+You can set the following parameters:
+
+ - currentTime
+ - playing
 
 ### bind(event, callback)
 
@@ -45,8 +55,26 @@ With `bind()` you can register eventlisteners for events being fired inside your
 
 Please note that the callback function is not necessarily called with an object and thus might have `eventName` as the single argument.
 
+You can bind to the following events:
+
+ - currentTime
+ - playing
+
 ### fire(event[, object])
 
 `fire()` allows you manually fire events in your application (both built-in and custom events), simply by calling it with the name of the event, and optionally an object that should be passed to all eventlisteners listening for this event.
 
 	myApp.fire("myEvent", {property: "value"});
+	
+
+## FAQ
+
+### The player does not react to commands
+
+Most likely is that you are using a older 23Video player that does not support the api. You have to change the player to use the new HTML5 player. That can be done from the controlpanel.
+
+In some cases where the video i in HTML5 mode, the network does not allow shifting time ind the video, this is preventing commands like `player.set('currentTime', 30);` from working.
+
+The solution is to force the player to use Flash when it is available with the following url paramter.
+
+	&displayDevice=flash
