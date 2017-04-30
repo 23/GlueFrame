@@ -39,7 +39,7 @@ var GlueFrame = function(iframe, appName) {
         }
     }, 100);
 
-    $this.glueFrameId = (new Date()).getTime();
+    $this.glueFrameId = Math.floor((new Date()).getTime()*Math.random());
     var _callbackCount = 0;
     var _callbacks = {};
 
