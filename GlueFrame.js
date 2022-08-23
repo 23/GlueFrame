@@ -22,13 +22,13 @@ var GlueFrame = function(iframe, appName) {
     // Poll the iframe until the app is bootstrapped
     $this.ready = false;
     var _readyInterval = window.setInterval(function(){
-        if (!this.ready && _method === "object") {
+        if (!$this.ready && _method === "object") {
             if (iframe.contentWindow[appName] && iframe.contentWindow[appName].bootstrapped) {
                 $this.ready = true;
                 window.clearInterval(_readyInterval);
                 _processQueue();
             }
-        } else if (!this.ready && _method === "post") {
+        } else if (!$this.ready && _method === "post") {
             $this.get("bootstrapped", function(bootstrapped){
                 if (bootstrapped) {
                     $this.ready = true;
@@ -145,7 +145,7 @@ var GlueFrame = function(iframe, appName) {
 
     // Parse messages received from iframe
     var _receiveMessage = function(e) {
-    	if (e.origin === _domain) {
+      if (e.origin === _domain) {
             var data;
             try {
                 data = JSON.parse(e.data);
